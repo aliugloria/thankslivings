@@ -1,12 +1,9 @@
 /**
  * Rhema Word for the Day, taken from the Hallelujah Challenge.
  *
- * Add one entry a day. `date` is the day it should appear (Lagos time, YYYY-MM-DD),
- * `word` is the word of the day, and `points` are short takeaways from the service.
- * If there is no entry for today, the popup and the header chip simply don't show,
- * so the site never presents yesterday's word as today's.
- *
- * Later this can move to a Supabase table with the same three fields.
+ * The words live in the Supabase `daily_words` table: add one row a night
+ * (date, word, points). This file holds the type, the "which word is current"
+ * rule, and an optional offline fallback list used when Supabase isn't configured.
  */
 export type DailyWord = {
   date: string;
@@ -14,17 +11,8 @@ export type DailyWord = {
   points?: string[];
 };
 
-export const DAILY_WORDS: DailyWord[] = [
-  {
-    date: "2026-10-14",
-    word: "Breakforth",
-    // Add the points from the service here, one short line each, for example:
-    // points: ["First point from the service.", "Second point from the service."],
-    points: [],
-  },
-];
-
-const BY_DATE = new Map(DAILY_WORDS.map((w) => [w.date, w]));
+/** Offline fallback only. Leave empty in production: the database is the source of truth. */
+export const DAILY_WORDS: DailyWord[] = [];
 
 /** Calendar date in Lagos as YYYY-MM-DD, whatever time zone the visitor is in. */
 export function lagosDateKey(ms: number): string {
@@ -36,6 +24,24 @@ export function lagosDateKey(ms: number): string {
   }).format(ms);
 }
 
-export function wordFor(ms: number): DailyWord | null {
-  return BY_DATE.get(lagosDateKey(ms)) ?? null;
+const DAY = 24 * 60 * 60 * 1000;
+
+/** The oldest and newest entry dates that count as "current" right now (Lagos time). */
+export function currentWindow(nowMs: number): { from: string; to: string } {
+  return { from: lagosDateKey(nowMs - DAY), to: lagosDateKey(nowMs) };
+}
+
+/**
+ * The current word: the newest entry dated today or yesterday. Services run late at night,
+ * so last night's word stays up until tonight's replaces it, but anything older is hidden
+ * rather than passed off as current.
+ */
+export function pickCurrentWord(words: DailyWord[], nowMs: number): DailyWord | null {
+  const { from, to } = currentWindow(nowMs);
+  let best: DailyWord | null = null;
+  for (const w of words) {
+    if (w.date < from || w.date > to) continue;
+    if (!best || w.date > best.date) best = w;
+  }
+  return best;
 }

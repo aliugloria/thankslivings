@@ -1,22 +1,41 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
-import { wordFor, type DailyWord } from "@/lib/dailyWord";
+import { useEffect, useState } from "react";
+import { DAILY_WORDS, pickCurrentWord, type DailyWord } from "@/lib/dailyWord";
 
-// Re-check once a minute so the word rolls over at midnight in Lagos without a reload.
-function subscribe(onChange: () => void) {
-  const id = window.setInterval(onChange, 60_000);
-  return () => window.clearInterval(id);
-}
+const REFRESH_MS = 10 * 60 * 1000;
 
 /**
- * Today's word, or null. The server render (and the static prerender) always sees null,
- * so a page built yesterday can never show a stale word; the browser fills it in.
+ * Today's word from /api/daily-word (Supabase), or null. If the API is unreachable we fall
+ * back to the bundled list, so a blip never hides the word or shows a stale one.
  */
 export function useDailyWord(): DailyWord | null {
-  return useSyncExternalStore(
-    subscribe,
-    () => wordFor(Date.now()),
-    () => null,
-  );
+  const [word, setWord] = useState<DailyWord | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      let next: DailyWord | null;
+      try {
+        const res = await fetch("/api/daily-word", { signal: AbortSignal.timeout(8000) });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        next = ((await res.json()) as { word: DailyWord | null }).word;
+      } catch {
+        next = pickCurrentWord(DAILY_WORDS, Date.now());
+      }
+      if (cancelled) return;
+      // keep the same object when nothing changed so effects keyed on it don't re-run
+      setWord((prev) => (prev && next && prev.date === next.date && prev.word === next.word ? prev : next));
+    }
+
+    void load();
+    const id = window.setInterval(() => void load(), REFRESH_MS);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, []);
+
+  return word;
 }

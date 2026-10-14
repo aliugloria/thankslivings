@@ -266,13 +266,4 @@ export function buildSeed(nowMs: number, total = 500): Testimony[] {
   });
 }
 
-// export function buildSeed(nowMs: number): Testimony[] {
-//   return SEED.map((s, i) => ({
-//     id: `seed-${String(i + 1).padStart(2, "0")}`,
-//     name: s.name,
-//     countryCode: s.countryCode,
-//     text: s.text,
-//     amens: s.amens,
-//     createdAt: new Date(nowMs - s.minutesAgo * 60_000).toISOString(),
-//   }));
-// }
+ 
