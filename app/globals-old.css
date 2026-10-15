@@ -9,6 +9,8 @@
   --surface: #ffffff;
   --land: #efe3cc;
   --land-edge: #dccdb0;
+  --ocean: #fffdf8;
+  --ocean-edge: rgba(26, 20, 16, 0.12);
   --ink: #1a1410;
   --muted: #7a6e62;
   --line: #1a1410;
@@ -25,6 +27,8 @@
   /* Land is charcoal, not cream: light arcs stay visible over it and the dots do the glowing. */
   --land: #34322e;
   --land-edge: #46433e;
+  --ocean: #22211f;
+  --ocean-edge: rgba(245, 240, 230, 0.14);
   --ink: #f5f0e6;
   --muted: #a89e90;
   --line: #f5f0e6;
@@ -65,6 +69,8 @@ body {
     transition: none;
   }
 }
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 /* ---- Dots ---------------------------------------------------------------- */
 

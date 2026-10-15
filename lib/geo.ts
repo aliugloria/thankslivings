@@ -68,57 +68,84 @@ function mainPolygon(f: CountryFeature): Polygon {
 }
 
 export type Point = { x: number; y: number };
+export type LonLat = [number, number];
 
-const cache = new Map<string, Point | null>();
+/** A country's biggest polygon and its bounds, worked out once (geoArea is not cheap). */
+type Shape = { poly: Polygon; w: number; s: number; e: number; n: number };
+const shapes = new Map<string, Shape | null>();
 
-/**
- * Where a testimony's dot sits. We never store or reveal a real location: the dot
- * is a deterministic pseudo-random point *inside the person's country*, seeded
- * by the testimony id so it is stable across reloads and devices.
- */
-export function dotPosition(id: string, countryCode: string): Point | null {
-  const key = `${id}:${countryCode}`;
-  if (cache.has(key)) return cache.get(key) ?? null;
+function shapeOf(code: string): Shape | null {
+  const key = code.toUpperCase();
+  const hit = shapes.get(key);
+  if (hit !== undefined) return hit;
 
-  const country = getCountry(countryCode);
-  const f = country ? byName.get(country.atlas ?? country.name) : undefined;
-  let result: Point | null = null;
-
+  const country = getCountry(key);
+  const f = country && !country.at ? byName.get(country.atlas ?? country.name) : undefined;
+  let shape: Shape | null = null;
   if (f) {
     const poly = mainPolygon(f);
     const [[w, s], [eRaw, n]] = geoBounds(poly);
-    const e = w > eRaw ? eRaw + 360 : eRaw;
-    const rand = mulberry32(hashString(key));
+    shape = { poly, w, s, e: w > eRaw ? eRaw + 360 : eRaw, n };
+  }
+  shapes.set(key, shape);
+  return shape;
+}
 
-    for (let i = 0; i < 200 && !result; i++) {
-      let lng = w + rand() * (e - w);
-      if (lng > 180) lng -= 360;
-      const lat = s + rand() * (n - s);
-      if (geoContains(poly, [lng, lat])) {
-        const p = projection([lng, lat]);
-        if (p) result = { x: p[0], y: p[1] };
+const wrapLng = (lng: number) => (lng > 180 ? lng - 360 : lng);
+
+const sampled = new Map<string, LonLat | null>();
+
+/**
+ * A deterministic pseudo-random point *inside the country*, seeded by `key`, as
+ * [longitude, latitude]. We never store or reveal a real location: a testimony's
+ * dot is just this point for its id, so it is stable across reloads and devices.
+ * Places too small for the world map get a point jittered around their fallback.
+ */
+export function sampleCountry(key: string, countryCode: string): LonLat | null {
+  const cacheKey = `${key}:${countryCode}`;
+  const hit = sampled.get(cacheKey);
+  if (hit !== undefined) return hit;
+
+  let result: LonLat | null = null;
+  const country = getCountry(countryCode);
+
+  if (country?.at) {
+    const rand = mulberry32(hashString(cacheKey));
+    result = [wrapLng(country.at[0] + (rand() - 0.5) * 1.4), country.at[1] + (rand() - 0.5) * 1.4];
+  } else {
+    const shape = shapeOf(countryCode);
+    if (shape) {
+      const { poly, w, s, e, n } = shape;
+      const rand = mulberry32(hashString(cacheKey));
+      for (let i = 0; i < 200 && !result; i++) {
+        const lng = wrapLng(w + rand() * (e - w));
+        const lat = s + rand() * (n - s);
+        if (geoContains(poly, [lng, lat])) result = [lng, lat];
       }
-    }
-    if (!result) {
       // Extremely thin shapes can defeat rejection sampling; use the bounds centre.
-      const p = projection([(w + e) / 2 > 180 ? (w + e) / 2 - 360 : (w + e) / 2, (s + n) / 2]);
-      if (p) result = { x: p[0], y: p[1] };
+      if (!result) result = [wrapLng((w + e) / 2), (s + n) / 2];
     }
   }
 
-  cache.set(key, result);
+  sampled.set(cacheKey, result);
   return result;
 }
 
-/**
- * The same dot as `dotPosition`, as [longitude, latitude], so the globe and the
- * flat map always agree on where a testimony lives.
- */
-export function dotLonLat(id: string, countryCode: string): [number, number] | null {
-  const p = dotPosition(id, countryCode);
-  if (!p || !projection.invert) return null;
-  const ll = projection.invert([p.x, p.y]);
-  return ll ? [ll[0], ll[1]] : null;
+/** Longitude/latitude to flat-map coordinates (the MAP_WIDTH x MAP_HEIGHT space). */
+export function projectLonLat(ll: LonLat): Point | null {
+  const p = projection(ll);
+  return p ? { x: p[0], y: p[1] } : null;
+}
+
+/** Where a testimony's dot sits on the flat map. */
+export function dotPosition(id: string, countryCode: string): Point | null {
+  const ll = sampleCountry(id, countryCode);
+  return ll ? projectLonLat(ll) : null;
+}
+
+/** The same dot as [longitude, latitude], so the globe and the flat map always agree. */
+export function dotLonLat(id: string, countryCode: string): LonLat | null {
+  return sampleCountry(id, countryCode);
 }
 
 export type Arc = { id: string; fromId: string; toId: string; d: string };

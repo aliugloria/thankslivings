@@ -48,7 +48,7 @@ export function ListPanel({
           transition={{ duration: 0.2 }}
           className="fixed inset-x-0 bottom-0 z-40 flex max-h-[60dvh] flex-col rounded-t-3xl border border-hairline bg-surface shadow-card md:inset-x-auto md:bottom-24 md:right-6 md:top-[4.5rem] md:max-h-none md:w-[380px] md:rounded-2xl"
         >
-          <div className="relative h-full w-full">
+          <div className="relative h-full w-full flex flex-col ">
             <div className="flex items-center justify-between gap-3 px-5 pb-3 pt-4">
               <h2 className="text-[15px] font-semibold">
                 {count === null
@@ -118,8 +118,10 @@ export function ListPanel({
               ))}
             </ul>
 
-            <Link href={'/testimonies'} className="bottom-5 absolute w-full flex items-center justify-center px-5">
-              <button className="border border-live hover:bg-live/50 transition-all duration-180 rounded-full w-full py-2 cursor-pointer">View All Testimonies</button>
+            <hr className="border border-muted/5" />
+
+            <Link href={'/testimonies'} className="w-full flex items-center justify-center p-5">
+              <button className="border border-live bg-hairline hover:bg-live/50 transition-all duration-180 rounded-full w-full py-2 cursor-pointer">View All Testimonies</button>
             </Link>
           </div>
         </motion.aside>

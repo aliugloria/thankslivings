@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
 import { useDailyWord } from "@/hooks/useDailyWord";
+import { useAmbientCloud } from "@/hooks/useAmbientCloud";
 import { useStoredState } from "@/hooks/useStoredState";
 import { useTestimonies } from "@/hooks/useTestimonies";
 import type { NewTestimony } from "@/lib/types";
@@ -19,7 +20,8 @@ import { WorldMap } from "./WorldMap";
 const WORD_SEEN_KEY = "tl:word-seen";
 
 export function ThanksApp() {
-  const { items, todayCount, source, now, submit, amen } = useTestimonies();
+  const { items, counts, total, todayCount, source, now, submit, amen } = useTestimonies();
+  const ambient = useAmbientCloud(counts, items);
   const [view, setView] = useStoredState<ViewMode>("tl:view", "globe", ["globe", "map"]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const changeView = useCallback(
@@ -137,6 +139,8 @@ export function ThanksApp() {
         {view === "globe" ? (
           <GlobeView
             items={items}
+            ambient={ambient}
+            total={total}
             selectedId={selectedId}
             now={now}
             onSelect={setSelectedId}
@@ -147,6 +151,8 @@ export function ThanksApp() {
         ) : (
           <WorldMap
             items={items}
+            ambient={ambient}
+            total={total}
             selectedId={selectedId}
             now={now}
             onSelect={setSelectedId}

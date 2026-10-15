@@ -5,6 +5,7 @@ import {
   geoOrthographic,
   geoPath,
 } from "d3-geo";
+import type { AmbientCloud } from "./ambient";
 import { GLOBE_BORDERS, GLOBE_LAND } from "./geo";
 import { clamp } from "./utils";
 
@@ -63,6 +64,8 @@ export type DrawInput = {
   selectedId: string | null;
   /** 0..1 draw-in progress for an arc; the component decides timing. */
   arcProgress: (arcId: string) => number;
+  /** every other testimony, as small non-interactive dots */
+  ambient: AmbientCloud;
 };
 
 type ArcGeometry = { pts: LonLat[]; lift: number[] };
@@ -101,7 +104,68 @@ export function createGlobeRenderer(ctx: CanvasRenderingContext2D, size: number)
     return built;
   }
 
-  function draw({ view, colors, arcs, lonLat, selectedId, arcProgress }: DrawInput) {
+  /** One pre-drawn dot per colour: stamping a tiny image is far cheaper than stroking an arc. */
+  const sprites = new Map<string, HTMLCanvasElement>();
+  const dpr = ctx.getTransform().a || 1;
+  const dotR = Math.max(1.4, size * 0.0028);
+
+  function sprite(color: string): HTMLCanvasElement | null {
+    if (typeof document === "undefined") return null;
+    let el = sprites.get(color);
+    if (!el) {
+      el = document.createElement("canvas");
+      el.width = el.height = Math.ceil(dotR * 2 * dpr) + 2;
+      const sctx = el.getContext("2d");
+      if (!sctx) return null;
+      sctx.fillStyle = color;
+      sctx.beginPath();
+      sctx.arc(el.width / 2, el.height / 2, dotR * dpr, 0, Math.PI * 2);
+      sctx.fill();
+      sprites.set(color, el);
+    }
+    return el;
+  }
+
+  /**
+   * Orthographic projection by hand: a few multiplies per dot (no trig, no d3 call), so
+   * thousands of dots stay cheap. Points on the far side (visibility <= 0) are skipped.
+   */
+  function drawAmbient(ambient: AmbientCloud, view: View, dim: boolean) {
+    if (ambient.length === 0) return;
+    const l0 = (view.lng * Math.PI) / 180;
+    const p0 = (view.lat * Math.PI) / 180;
+    const sinL0 = Math.sin(l0);
+    const cosL0 = Math.cos(l0);
+    const sin0 = Math.sin(p0);
+    const cos0 = Math.cos(p0);
+    const w = dotR * 2 + 2 / dpr;
+
+    ctx.globalAlpha = dim ? 0.3 : 0.7;
+    for (const g of ambient) {
+      const img = sprite(g.color);
+      for (let i = 0; i < g.sinLam.length; i++) {
+        const sl = g.sinLam[i];
+        const cl = g.cosLam[i];
+        const sinDl = sl * cosL0 - cl * sinL0;
+        const cosDl = cl * cosL0 + sl * sinL0;
+        const sp = g.sinPhi[i];
+        const cp = g.cosPhi[i];
+        if (sin0 * sp + cos0 * cp * cosDl < 0.08) continue; // too close to, or past, the horizon
+        const x = c + radius * cp * sinDl;
+        const y = c - radius * (cos0 * sp - sin0 * cp * cosDl);
+        if (img) ctx.drawImage(img, x - w / 2, y - w / 2, w, w);
+        else {
+          ctx.fillStyle = g.color;
+          ctx.beginPath();
+          ctx.arc(x, y, dotR, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function draw({ view, colors, arcs, lonLat, selectedId, arcProgress, ambient }: DrawInput) {
     projection.rotate([-view.lng, -view.lat, 0]);
     const center: LonLat = [view.lng, view.lat];
 
@@ -164,7 +228,6 @@ export function createGlobeRenderer(ctx: CanvasRenderingContext2D, size: number)
       const last = Math.min(pts.length - 1, Math.floor(eased * ARC_STEPS) + 1);
 
       const connected = selectedId !== null && (arc.fromId === selectedId || arc.toId === selectedId);
-      // ctx.globalAlpha = connected ? 1 : selectedId !== null ? 0.16 : 0.45;
       ctx.globalAlpha = connected ? 1 : selectedId !== null ? 0.1 : 0.28;
       ctx.lineWidth = connected ? 1.6 : 1;
 
@@ -193,6 +256,8 @@ export function createGlobeRenderer(ctx: CanvasRenderingContext2D, size: number)
     }
     ctx.globalAlpha = 1;
     ctx.restore();
+
+    drawAmbient(ambient, view, selectedId !== null);
 
     // rim
     ctx.beginPath();

@@ -5,7 +5,7 @@ import { API_CONFIG } from "@/lib/api/config";
 import {
   flushQueue,
   hasAmened,
-  loadTestimonies,
+  loadSnapshot,
   sendAmen,
   submitTestimony,
   type SubmitResult,
@@ -13,22 +13,29 @@ import {
 import type { DataSource, NewTestimony, Testimony } from "@/lib/types";
 
 const DAY = 24 * 60 * 60 * 1000;
+const MIN_GAP_MS = 10_000;
 
 export function useTestimonies() {
   const [items, setItems] = useState<Testimony[]>([]);
   const [serverCount, setServerCount] = useState(0);
+  const [counts, setCounts] = useState<Record<string, number>>({});
+  const [total, setTotal] = useState(0);
   const [source, setSource] = useState<DataSource | null>(null);
   const [now, setNow] = useState<number | null>(null);
 
   /** ids this visitor created in this session, kept visible even if the server hides them */
   const mine = useRef(new Map<string, Testimony>());
+  const lastRefresh = useRef(0);
 
   const refresh = useCallback(async () => {
-    const { data, source } = await loadTestimonies();
-    const serverIds = new Set(data.items.map((t) => t.id));
+    const { data, source } = await loadSnapshot();
+    const serverIds = new Set(data.recent.map((t) => t.id));
     const keep = [...mine.current.values()].filter((t) => !serverIds.has(t.id));
-    setItems([...data.items, ...keep]);
+    setItems([...data.recent, ...keep]);
     setServerCount(data.todayCount);
+    setCounts(data.counts);
+    setTotal(data.total);
+    lastRefresh.current = Date.now();
     setSource(source);
     setNow(Date.now());
   }, []);
@@ -48,7 +55,10 @@ export function useTestimonies() {
   // live updates: poll while visible, catch up when the tab returns, retry queue when back online
   useEffect(() => {
     const tick = () => {
-      if (document.visibilityState === "visible") void refresh();
+      if (document.visibilityState !== "visible") return;
+      // flicking between tabs shouldn't hammer the server
+      if (Date.now() - lastRefresh.current < MIN_GAP_MS) return;
+      void refresh();
     };
     const id = window.setInterval(tick, API_CONFIG.pollMs);
     const onOnline = async () => {
@@ -90,5 +100,5 @@ export function useTestimonies() {
     void sendAmen(id);
   }, []);
 
-  return { items, todayCount, source, now, submit, amen };
+  return { items, counts, total, todayCount, source, now, submit, amen };
 }

@@ -1,15 +1,15 @@
 import { ENDPOINTS } from "../config";
 import { fetchJson } from "../http";
-import type {
-  NewTestimony,
-  Testimony,
-  TestimonyListResponse,
-} from "@/lib/types";
+import type { GlobeSnapshot, NewTestimony, Testimony, TestimonyPage } from "@/lib/types";
 
 /** Talks to the real backend. Everything here may throw; callers own the fallbacks. */
 export const remoteProvider = {
-  list(): Promise<TestimonyListResponse> {
-    return fetchJson<TestimonyListResponse>(ENDPOINTS.testimonies(), {
+  snapshot(): Promise<GlobeSnapshot> {
+    return fetchJson<GlobeSnapshot>(ENDPOINTS.globe(), { method: "GET", cache: "no-store" });
+  },
+
+  page(cursor: string | null, limit: number): Promise<TestimonyPage> {
+    return fetchJson<TestimonyPage>(ENDPOINTS.testimoniesPage(cursor, limit), {
       method: "GET",
       cache: "no-store",
     });

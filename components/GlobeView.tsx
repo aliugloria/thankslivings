@@ -2,6 +2,7 @@
 
 import { AnimatePresence, useReducedMotion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { AmbientCloud } from "@/lib/ambient";
 import { dotColor } from "@/lib/colors";
 import { countryName } from "@/lib/countries";
 import { buildArcs, dotLonLat, dotPosition } from "@/lib/geo";
@@ -19,6 +20,9 @@ import { Popover } from "./Popover";
 
 type Props = {
   items: Testimony[];
+  total: number;
+  /** every other testimony, drawn as small dots */
+  ambient: AmbientCloud;
   selectedId: string | null;
   now: number | null;
   onSelect: (id: string) => void;
@@ -41,6 +45,8 @@ type Fly = { id: string; from: View; to: View; t0: number; dur: number };
 
 export function GlobeView({
   items,
+  ambient,
+  total,
   selectedId,
   now,
   onSelect,
@@ -92,6 +98,7 @@ export function GlobeView({
   const locatedRef = useRef(located);
   const lonLatRef = useRef(lonLat);
   const arcsRef = useRef(arcs);
+  const ambientRef = useRef(ambient);
   const selectedRef = useRef(selectedId);
   const reduceRef = useRef(false);
   const dirty = useRef(true);
@@ -109,6 +116,11 @@ export function GlobeView({
     arcsRef.current = arcs;
     dirty.current = true;
   }, [located, lonLat, arcs]);
+
+  useEffect(() => {
+    ambientRef.current = ambient;
+    dirty.current = true;
+  }, [ambient]);
 
   useEffect(() => {
     selectedRef.current = selectedId;
@@ -193,6 +205,7 @@ export function GlobeView({
         arcs: arcsRef.current,
         lonLat: lonLatRef.current,
         selectedId: selectedRef.current,
+        ambient: ambientRef.current,
         arcProgress: (id) => arcProgress(id, t, indexOf.get(id) ?? 0),
       });
       arcsSeeded.current = arcsRef.current.length > 0;
@@ -411,9 +424,16 @@ export function GlobeView({
         )}
       </AnimatePresence>
 
-      {hint && size > 0 && (
+      {/* {hint && size > 0 && (
         <p className="pointer-events-none absolute -bottom-7 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs text-muted">
           Drag to rotate
+        </p>
+      )} */}
+            {size > 0 && (hint || total > items.length) && (
+        <p className="pointer-events-none absolute -bottom-7 left-1/2 w-max max-w-[92vw] -translate-x-1/2 text-center text-xs text-muted">
+          {hint
+            ? "Drag to rotate"
+            : `${total.toLocaleString()} people have thanked God · Only The newest ${items.length.toLocaleString()} are tappable`}
         </p>
       )}
     </div>

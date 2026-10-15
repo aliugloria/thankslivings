@@ -1,9 +1,10 @@
 import { buildSeed } from "@/lib/seed";
 import type {
   DataSource,
+  GlobeSnapshot,
   NewTestimony,
   Testimony,
-  TestimonyListResponse,
+  TestimonyPage,
 } from "@/lib/types";
 import { isRetriable } from "./http";
 import { localProvider, type QueuedTestimony } from "./providers/local";
@@ -11,8 +12,27 @@ import { remoteProvider } from "./providers/remote";
 
 const DAY = 24 * 60 * 60 * 1000;
 
+const RECENT_FALLBACK = 300;
+
 function countLast24h(items: Testimony[], nowMs: number): number {
   return items.filter((t) => nowMs - new Date(t.createdAt).getTime() < DAY).length;
+}
+
+function countByCountry(items: Testimony[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const t of items) counts[t.countryCode] = (counts[t.countryCode] ?? 0) + 1;
+  return counts;
+}
+
+/** The built-in sample testimonies, shaped like a server response. */
+function seedSnapshot(nowMs: number): GlobeSnapshot {
+  const all = buildSeed(nowMs).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return {
+    recent: all.slice(0, RECENT_FALLBACK),
+    counts: countByCountry(all),
+    total: all.length,
+    todayCount: countLast24h(all, nowMs),
+  };
 }
 
 function queuedToTestimony(q: QueuedTestimony): Testimony {
@@ -27,33 +47,29 @@ function queuedToTestimony(q: QueuedTestimony): Testimony {
 }
 
 /**
- * Fallback chain for reading:
+ * Fallback chain for reading the globe:
  *   1. remote API (with timeout + retries)
  *   2. last good response cached in the browser
  *   3. built-in seed testimonies
  * It never throws, so the map always has something honest to show.
  * `source` tells the UI which layer answered.
  */
-export async function loadTestimonies(): Promise<{
-  data: TestimonyListResponse;
-  source: DataSource;
-}> {
+export async function loadSnapshot(): Promise<{ data: GlobeSnapshot; source: DataSource }> {
   const nowMs = Date.now();
-  let data: TestimonyListResponse;
+  let data: GlobeSnapshot;
   let source: DataSource;
 
   try {
-    data = await remoteProvider.list();
+    data = await remoteProvider.snapshot();
     localProvider.setCache(data);
     source = "remote";
   } catch {
     const cached = localProvider.getCache();
-    if (cached && cached.items.length > 0) {
+    if (cached && cached.recent.length > 0) {
       data = cached;
       source = "cache";
     } else {
-      const items = buildSeed(nowMs);
-      data = { items, todayCount: countLast24h(items, nowMs) };
+      data = seedSnapshot(nowMs);
       source = "seed";
     }
   }
@@ -61,15 +77,35 @@ export async function loadTestimonies(): Promise<{
   // Show anything still waiting to be sent, so a person's own dot never vanishes.
   const queued = localProvider.getQueue().map(queuedToTestimony);
   if (queued.length > 0) {
-    const known = new Set(data.items.map((t) => t.id));
+    const known = new Set(data.recent.map((t) => t.id));
     const extra = queued.filter((t) => !known.has(t.id));
     data = {
-      items: [...data.items, ...extra],
+      ...data,
+      recent: [...extra, ...data.recent],
       todayCount: data.todayCount + extra.length,
     };
   }
 
   return { data, source };
+}
+
+/** One page of the full list. Falls back to the cached or sample testimonies if the API is down. */
+export async function loadPage(
+  cursor: string | null,
+  limit: number,
+): Promise<{ page: TestimonyPage; source: DataSource }> {
+  try {
+    return { page: await remoteProvider.page(cursor, limit), source: "remote" };
+  } catch (err) {
+    // only the first page falls back; a failed later page just stops and can be retried
+    if (cursor !== null) throw err;
+    const cached = localProvider.getCache();
+    if (cached && cached.recent.length > 0) {
+      return { page: { items: cached.recent, nextCursor: null, total: cached.total }, source: "cache" };
+    }
+    const seed = seedSnapshot(Date.now());
+    return { page: { items: seed.recent, nextCursor: null, total: seed.total }, source: "seed" };
+  }
 }
 
 export type SubmitResult = {

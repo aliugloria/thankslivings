@@ -138,7 +138,7 @@ function ModalBody({ onClose, onSubmit }: Omit<Props, "open">) {
         </select>
       </label>
 
-      <div className="mt-2 flex items-center gap-3">
+      <div className="mt-2 w-full flex flex-col gap-3">
         <label className="min-w-0 flex-1">
           <span className="sr-only">Your name</span>
           <input
@@ -165,7 +165,7 @@ function ModalBody({ onClose, onSubmit }: Omit<Props, "open">) {
               className={`absolute top-0.5 h-5 w-5 rounded-full bg-surface shadow transition-all ${shareName ? "left-[1.125rem]" : "left-0.5"}`}
             />
           </span>
-          <span className="w-[5.2rem] text-left leading-tight">
+          <span className="w-[5.2rem] text-left leading-tight whitespace-nowrap">
             {shareName ? "Share my name" : "Stay anonymous"}
           </span>
         </button>

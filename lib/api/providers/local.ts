@@ -1,4 +1,4 @@
-import type { NewTestimony, TestimonyListResponse } from "@/lib/types";
+import type { NewTestimony, GlobeSnapshot } from "@/lib/types";
 
 /**
  * Browser-side persistence used as the fallback layer:
@@ -8,7 +8,7 @@ import type { NewTestimony, TestimonyListResponse } from "@/lib/types";
  * Every access is wrapped because storage can be blocked (private windows, etc.).
  */
 const KEYS = {
-  cache: "tl:cache:v1",
+  cache: "tl:cache:v2",
   queue: "tl:queue:v1",
   amened: "tl:amened:v1",
 } as const;
@@ -37,8 +37,8 @@ export type QueuedTestimony = {
 };
 
 export const localProvider = {
-  getCache: () => read<TestimonyListResponse | null>(KEYS.cache, null),
-  setCache: (data: TestimonyListResponse) => write(KEYS.cache, data),
+  getCache: () => read<GlobeSnapshot | null>(KEYS.cache, null),
+  setCache: (data: GlobeSnapshot) => write(KEYS.cache, data),
 
   getQueue: () => read<QueuedTestimony[]>(KEYS.queue, []),
   setQueue: (queue: QueuedTestimony[]) => write(KEYS.queue, queue),
