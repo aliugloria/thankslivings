@@ -33,14 +33,17 @@ export function DailyWordModal({ open, word, onClose, onShare }: Props) {
             exit={{ opacity: 0, y: 24 }}
             transition={{ duration: 0.25 }}
             className="relative max-h-[88dvh] w-full max-w-md overflow-y-auto rounded-3xl border border-hairline bg-surface px-6 pb-6 pt-5 shadow-card"
-            style={{
-              backgroundImage:
-                "radial-gradient(70% 40% at 50% 22%, color-mix(in srgb, #f5b83d 18%, transparent), transparent 75%)",
-            }}
+            // style={{
+            //   backgroundImage:
+            //     "radial-gradient(70% 40% at 50% 22%, color-mix(in srgb, #f5b83d 18%, transparent), transparent 75%)",
+            // }}
           >
             <div className="flex items-start justify-between gap-4">
               <p id="word-title" className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">
-                Rhema Word for the Day
+                Rhema Word for the Day <br />
+                <span>
+                Today&rsquo;s word from the Hallelujah Challenge.
+                </span>
               </p>
               <button
                 type="button"
@@ -55,9 +58,9 @@ export function DailyWordModal({ open, word, onClose, onShare }: Props) {
             </div>
 
             <h2 className="mt-6 text-center font-script text-6xl leading-tight sm:text-7xl">{word.word}</h2>
-            <p className="mt-3 text-center text-sm text-muted">
+            {/* <p className="mt-3 text-center text-sm text-muted">
               Today&rsquo;s word from the Hallelujah Challenge.
-            </p>
+            </p> */}
 
             {word.points && word.points.length > 0 && (
               <div className="mt-6 border-t border-hairline pt-5">
@@ -88,17 +91,20 @@ export function DailyWordModal({ open, word, onClose, onShare }: Props) {
             >
               Thank God for it
             </button>
-            <button
+            {/* <button
               type="button"
               onClick={onClose}
               className="mt-2 w-full rounded-xl px-4 py-3 text-sm text-muted transition-colors hover:bg-hairline"
             >
               Close
-            </button>
-
-            <p className="mt-3 text-center text-[11px] text-muted/80">
-              Shared by the Thanksliving community, not an official page.
+            </button> */}
+              <p className="mt-3 text-center text-[11px] text-muted/80">
+              Shared by the Thanksliving community.
             </p>
+
+            {/* <p className="mt-3 text-center text-[11px] text-muted/80">
+              Shared by the Thanksliving community, not an official page.
+            </p> */}
           </motion.div>
         </motion.div>
       )}

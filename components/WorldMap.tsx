@@ -54,7 +54,7 @@ export function WorldMap({ items, ambient, total, selectedId, now, onSelect, onD
 
     const sx = size.w / MAP_WIDTH;
     const sy = size.h / MAP_HEIGHT;
-    const r = Math.max(1.4, size.w * 0.0026);
+    const r = Math.max(1.2, size.w * 0.0011);
     ctx.globalAlpha = selectedId !== null ? 0.3 : 0.7;
     for (const g of ambient) {
       ctx.fillStyle = g.color;

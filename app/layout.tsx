@@ -21,6 +21,15 @@ export const metadata: Metadata = {
   title: "Thanksliving",
   description:
     "A map of gratitude. Drop a dot, share what God has done for you, and see people all over the world giving thanks.",
+  icons: {
+    icon: "/logo-dark.svg",
+    apple: "/logo-dark.svg",
+  },
+  openGraph: {
+    title: "Thanksliving",
+    description: "Thank God with the world.",
+    images: ["/og.png"],
+  },
 };
 
 export const viewport: Viewport = {

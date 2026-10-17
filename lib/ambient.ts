@@ -1,6 +1,6 @@
 import { DOT_COLORS } from "./colors";
 import { isKnownCountry } from "./countries";
-import { projectLonLat, sampleCountry } from "./geo";
+import { countryArea, projectLonLat, sampleCountry } from "./geo";
 import { hashString } from "./utils";
 
 /**
@@ -12,6 +12,16 @@ import { hashString } from "./utils";
 
 /** Most ambient dots we ever draw. Past this, each country's share is scaled down evenly. */
 export const AMBIENT_MAX = 2500;
+
+/** Most backdrop dots per steradian of land, so a small country never becomes a solid blob. */
+const MAX_DENSITY = 1500;
+/** Cap for places drawn as a single fallback point (islands, microstates). */
+const POINT_CAP = 6;
+
+function capFor(code: string): number {
+  const area = countryArea(code);
+  return area > 0 ? Math.max(3, Math.round(area * MAX_DENSITY)) : POINT_CAP;
+}
 
 export type AmbientPlan = [code: string, dots: number][];
 
@@ -32,13 +42,15 @@ export function planAmbient(counts: Record<string, number>, real: ReadonlyMap<st
     }
   }
   rest.sort((a, b) => (a[0] < b[0] ? -1 : 1));
-  if (total <= AMBIENT_MAX) return rest;
-
-  // keep every country visible (at least one dot) and the rest in proportion
-  const scale = AMBIENT_MAX / total;
-  return rest.map(([code, n]) => [code, Math.max(1, Math.round(n * scale))]);
+  if (total > AMBIENT_MAX) {
+    // keep every country visible (at least one dot) and the rest in proportion
+    const scale = AMBIENT_MAX / total;
+    for (const r of rest) r[1] = Math.max(1, Math.round(r[1] * scale));
+  }
+  // then thin out crowded countries: the backdrop should hint at spread, not paint blobs
+  for (const r of rest) r[1] = Math.min(r[1], capFor(r[0]));
+  return rest;
 }
-
 /** One colour's worth of dots, as flat typed arrays so a frame is a tight loop. */
 export type AmbientGroup = {
   color: string;

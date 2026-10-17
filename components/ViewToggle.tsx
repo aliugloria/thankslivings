@@ -14,7 +14,7 @@ export function ViewToggle({ value, onChange }: { value: ViewMode; onChange: (v:
     <div
       role="group"
       aria-label="Choose view"
-      className="flex h-10 items-center rounded-full border border-hairline bg-surface p-1 shadow-card"
+      className="hidden md:flex h-10 items-center rounded-full border border-hairline bg-surface p-1 shadow-card"
     >
       {OPTIONS.map((o) => (
         <button

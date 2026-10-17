@@ -7,6 +7,7 @@ import { useTestimonyFeed } from "@/hooks/useTestimonyFeed";
 import { hasAmened } from "@/lib/api/testimonies";
 import { TestimonyCard } from "@/components/TestimonyCard";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { Globe, Home } from "lucide-react";
 
 const GAP = 12;
 /** Narrowest a card may get before the grid drops a column. */
@@ -58,21 +59,21 @@ export default function TestimoniesPage() {
   const starting = now === null;
 
   return (
-    // the root layout locks body scrolling for the globe, so this page scrolls itself
     <div ref={scrollRef} className="h-dvh overflow-y-auto bg-bg">
       <div className="mx-auto w-full max-w-7xl px-4 pb-24 pt-5 md:px-8 md:pt-8">
         <header className="flex items-start justify-between gap-3">
-          <Link href="/" className="font-script text-4xl leading-none md:text-5xl">
-            Thanksliving
-          </Link>
-          <div className="flex items-center gap-2">
-            <Link
+
+          <Link
               href="/"
               className="flex h-10 items-center rounded-full border border-hairline bg-surface px-4 text-sm font-medium shadow-card transition-colors hover:bg-ink hover:text-bg"
             >
-              <span className="sm:hidden">Globe</span>
+              <span className="sm:hidden"><Globe /></span>
               <span className="hidden sm:inline">Back to the globe</span>
             </Link>
+
+
+
+          <div className="flex items-center gap-2">
             <ThemeToggle />
           </div>
         </header>

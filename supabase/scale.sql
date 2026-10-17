@@ -28,10 +28,15 @@ create index if not exists testimonies_country_idx
 
 
 
------------- 1 MILLION STRESS TEST . PASTE ON SQL EDITOR ON SUPABASE ----------------------
+------------ 50k STRESS TEST . PASTE ON SQL EDITOR ON SUPABASE ----------------------
 -- insert into testimonies (name, country_code, text, created_at)
 -- select 'STRESS',
 --        (array['NG','US','GB','GH','KE','ZA','IN','BR','CA','DE','AU','PH'])[1+floor(random()*12)],
 --        'Stress test testimony number ' || g,
 --        now() - (g || ' seconds')::interval
 -- from generate_series(1,50000) g;
+
+
+------------ delete 50k STRESS TEST . PASTE ON SQL EDITOR ON SUPABASE ----------------------
+
+delete from testimonies where name = 'STRESS';

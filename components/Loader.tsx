@@ -44,10 +44,10 @@ export function Loader({ onDone }: { onDone?: () => void }) {
           key="loader"
           aria-hidden
           className="fixed inset-0 z-[60] grid place-items-center bg-bg"
-          style={{
-            backgroundImage:
-              "radial-gradient(60% 50% at 50% 48%, color-mix(in srgb, #f5b83d 16%, transparent), transparent 70%)",
-          }}
+          // style={{
+          //   backgroundImage:
+          //     "radial-gradient(60% 50% at 50% 48%, color-mix(in srgb, #f5b83d 16%, transparent), transparent 70%)",
+          // }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.7 }}
         >
@@ -64,8 +64,8 @@ export function Loader({ onDone }: { onDone?: () => void }) {
             <motion.h1
               initial={{ clipPath: "inset(-15% 100% -15% -5%)" }}
               animate={{ clipPath: "inset(-15% -5% -15% -5%)" }}
-              transition={{ duration: 1.7, delay: 0.5, ease: [0.4, 0, 0.2, 1] }}
-              className="px-4 font-script text-7xl leading-tight sm:text-8xl"
+              transition={{ duration: 2, delay: 0.5, ease: [0.4, 0, 0.2, 1] }}
+              className="px-4 font-script text-5xl leading-tight sm:text-8xl shadow-2xl"
             >
               Thanksliving
             </motion.h1>

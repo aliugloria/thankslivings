@@ -1,10 +1,11 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { COUNTRIES, isKnownCountry } from "@/lib/countries";
 import type { NewTestimony } from "@/lib/types";
 import { MAX_NAME, MAX_TEXT, validateNewTestimony } from "@/lib/validation";
+import { X } from "lucide-react";
 
 type Props = {
   open: boolean;
@@ -12,6 +13,9 @@ type Props = {
   /** Throws with a user-readable message when the server rejects the testimony. */
   onSubmit: (input: NewTestimony) => Promise<void>;
 };
+
+/** Pre-filled in the box, but it's ordinary text: people can edit or clear it. */
+const PREFIX = "Are You not the One who ";
 
 export function AddModal({ open, onClose, onSubmit }: Props) {
   return (
@@ -46,16 +50,29 @@ export function AddModal({ open, onClose, onSubmit }: Props) {
 
 /** Only mounted while the modal is open, so its state resets every time. */
 function ModalBody({ onClose, onSubmit }: Omit<Props, "open">) {
-  const [text, setText] = useState("");
+  const [text, setText] = useState(PREFIX);
   const [countryCode, setCountryCode] = useState(guessCountry);
   const [shareName, setShareName] = useState(true);
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const areaRef = useRef<HTMLTextAreaElement>(null);
+
+  // put the cursor after the prefix so they can just keep typing
+  useEffect(() => {
+    const el = areaRef.current;
+    if (el) el.setSelectionRange(el.value.length, el.value.length);
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (busy) return;
+
+    // the prefix alone isn't a testimony
+    if (text.trim().toLowerCase() === PREFIX.trim().toLowerCase()) {
+      setError("Finish the sentence. What has He done for you?");
+      return;
+    }
 
     const result = validateNewTestimony({
       text,
@@ -72,7 +89,11 @@ function ModalBody({ onClose, onSubmit }: Omit<Props, "open">) {
     try {
       await onSubmit(result.value);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong. Please try again.",
+      );
       setBusy(false);
     }
   }
@@ -84,11 +105,14 @@ function ModalBody({ onClose, onSubmit }: Omit<Props, "open">) {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 id="add-title" className="text-xl font-semibold tracking-tight">
-            What has God done for you?
+            {/* What has God done for you? */}
+            Raise an altar of thanks
           </h2>
           <p className="mt-1.5 text-sm text-muted">
-            Share a short testimony of what God has done in your life. Your story can encourage
-            someone around the world.
+            {/* Share a short testimony of what God has done in your life. Your story can encourage
+            someone around the world. */}
+            {/* take a moment to add yours */}
+            Recount what He has done, big or small. Finish the sentence, or say it your own way and let the world thank Him with you.
           </p>
         </div>
         <button
@@ -97,20 +121,19 @@ function ModalBody({ onClose, onSubmit }: Omit<Props, "open">) {
           aria-label="Close"
           className="-mr-2 -mt-1 grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted hover:bg-hairline"
         >
-          <svg width="12" height="12" viewBox="0 0 10 10" fill="none" aria-hidden>
-            <path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
+          <X />
         </button>
       </div>
 
       <label className="mt-5 block">
         <span className="sr-only">Your testimony</span>
         <textarea
+          ref={areaRef}
           autoFocus
           value={text}
           onChange={(e) => setText(e.target.value.slice(0, MAX_TEXT))}
           rows={4}
-          placeholder="Write your testimony here…"
+          placeholder="Are You not the One who woke me up this morning?"
           className="w-full resize-none rounded-xl border border-hairline bg-bg/60 px-3.5 py-3 text-[15px] outline-none transition-shadow placeholder:text-muted/70 focus:ring-2 focus:ring-ink/20"
         />
         <span
@@ -182,12 +205,19 @@ function ModalBody({ onClose, onSubmit }: Omit<Props, "open">) {
         disabled={busy}
         className="mt-5 w-full rounded-xl bg-ink px-4 py-3.5 text-[15px] font-semibold text-bg transition-opacity hover:opacity-90 disabled:opacity-60"
       >
-        {busy ? "Dropping…" : "Drop my thanks"}
+        {busy ? "Dropping…" : "Raise my thanks"}
       </button>
 
       <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-muted">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
-          <rect x="2.5" y="5.5" width="7" height="5" rx="1.2" stroke="currentColor" />
+          <rect
+            x="2.5"
+            y="5.5"
+            width="7"
+            height="5"
+            rx="1.2"
+            stroke="currentColor"
+          />
           <path d="M4 5.5V4a2 2 0 114 0v1.5" stroke="currentColor" />
         </svg>
         Your dot is placed randomly inside your country.

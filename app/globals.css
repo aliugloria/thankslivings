@@ -96,6 +96,7 @@ body {
   background: var(--dot);
   border: 2px solid var(--dot-border);
   /* calm by default: muted colour, no glow. Only the newest dot (and hover/selected) glows. */
+  /* filter: saturate(0.55); */
   filter: saturate(0.55);
   opacity: 0.85;
   box-shadow: none;

@@ -107,7 +107,7 @@ export function createGlobeRenderer(ctx: CanvasRenderingContext2D, size: number)
   /** One pre-drawn dot per colour: stamping a tiny image is far cheaper than stroking an arc. */
   const sprites = new Map<string, HTMLCanvasElement>();
   const dpr = ctx.getTransform().a || 1;
-  const dotR = Math.max(1.4, size * 0.0028);
+  const dotR = Math.max(1.2, size * 0.0016);
 
   function sprite(color: string): HTMLCanvasElement | null {
     if (typeof document === "undefined") return null;

@@ -93,6 +93,12 @@ function shapeOf(code: string): Shape | null {
 
 const wrapLng = (lng: number) => (lng > 180 ? lng - 360 : lng);
 
+/** Land area of a country in steradians (0 for places too small for the map). */
+export function countryArea(code: string): number {
+  const shape = shapeOf(code);
+  return shape ? geoArea(shape.poly) : 0;
+}
+
 const sampled = new Map<string, LonLat | null>();
 
 /**
