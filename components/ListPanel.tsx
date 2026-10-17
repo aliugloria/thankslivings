@@ -46,7 +46,7 @@ export function ListPanel({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 16 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-x-3 bottom-24 z-40 flex max-h-[60dvh] flex-col rounded-3xl  border border-hairline bg-surface 
+          className="fixed inset-x-3 bottom-24 z-1000 flex max-h-[60dvh] flex-col rounded-3xl  border border-hairline bg-surface 
           shadow-card md:inset-x-auto md:bottom-24 md:right-6 md:top-[4.5rem] md:max-h-none md:w-[380px] md:rounded-2xl"
           // className="fixed inset-x-0 bottom-0 z-40 flex max-h-[60dvh] flex-col rounded-t-3xl border border-hairline bg-surface shadow-card md:inset-x-auto md:bottom-24 md:right-6 md:top-[4.5rem] md:max-h-none md:w-[380px] md:rounded-2xl"
         >

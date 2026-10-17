@@ -33,17 +33,15 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f8f4ec",
+  //themeColor: "#f8f4ec",
+  themeColor: "#1a1917",
 };
 
-// Runs before first paint so a saved dark choice never flashes light.
-// Default is light; to follow the system instead, fall back to
-// matchMedia("(prefers-color-scheme: dark)") when nothing is stored.
-const themeScript = `try{var t=localStorage.getItem("tl:theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t)}catch(e){}`;
+// Runs before first paint. Default is dark; only an explicit saved "light" overrides it.
+const themeScript = `try{var t=localStorage.getItem("tl:theme");document.documentElement.setAttribute("data-theme",t==="light"?"light":"dark")}catch(e){document.documentElement.setAttribute("data-theme","dark")}`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    // suppressHydrationWarning: the script above may set data-theme before React hydrates
     <html
       lang="en"
       suppressHydrationWarning
@@ -53,8 +51,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="h-full overflow-hidden">
-      <Analytics />
-        {children}</body>
+        <Analytics />
+        {children}
+      </body>
     </html>
   );
 }

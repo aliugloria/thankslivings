@@ -5,16 +5,20 @@ import { useSyncExternalStore } from "react";
 const STORAGE_KEY = "tl:theme";
 type Theme = "light" | "dark";
 
-// The <html data-theme> attribute is the single source of truth (set before first paint
-// by the inline script in layout.tsx), so the toggle just mirrors it.
 function subscribe(onChange: () => void) {
   const mo = new MutationObserver(onChange);
-  mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  mo.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["data-theme"],
+  });
   return () => mo.disconnect();
 }
+
 const getSnapshot = (): Theme =>
-  document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
-const getServerSnapshot = (): Theme => "light";
+  document.documentElement.getAttribute("data-theme") === "light"
+    ? "light"
+    : "dark";
+const getServerSnapshot = (): Theme => "dark";
 
 export function ThemeToggle() {
   const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
@@ -22,12 +26,22 @@ export function ThemeToggle() {
 
   function toggle() {
     document.documentElement.setAttribute("data-theme", next);
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute("content", next === "dark" ? "#1a1917" : "#f8f4ec");
     try {
       localStorage.setItem(STORAGE_KEY, next);
-    } catch {
-      /* storage blocked: the choice just won't persist */
-    }
+    } catch {}
   }
+
+  // function toggle() {
+  //   document.documentElement.setAttribute("data-theme", next);
+  //   try {
+  //     localStorage.setItem(STORAGE_KEY, next);
+  //   } catch {
+  //     /* storage blocked: the choice just won't persist */
+  //   }
+  // }
 
   return (
     <button

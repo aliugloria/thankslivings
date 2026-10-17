@@ -21,10 +21,9 @@
 }
 
 [data-theme="dark"] {
-  color-scheme: dark; /* dark native controls: select list, scrollbars */
+  color-scheme: dark; 
   --bg: #1a1917;
   --surface: #262522;
-  /* Land is charcoal, not cream: light arcs stay visible over it and the dots do the glowing. */
   --land: #34322e;
   --land-edge: #46433e;
   --ocean: #22211f;
@@ -49,7 +48,8 @@
   --color-live: var(--live);
   --shadow-card: var(--shadow);
   --font-sans: var(--font-inter), system-ui, sans-serif;
-  --font-serif: var(--font-serif), Georgia, serif;
+  /* --font-serif: var(--font-serif), Georgia, serif; */
+  --font-serif: Georgia, serif;
   --font-script: var(--font-script), "Snell Roundhand", cursive;
 }
 
@@ -95,8 +95,6 @@ body {
   border-radius: 9999px;
   background: var(--dot);
   border: 2px solid var(--dot-border);
-  /* calm by default: muted colour, no glow. Only the newest dot (and hover/selected) glows. */
-  /* filter: saturate(0.55); */
   filter: saturate(0.55);
   opacity: 0.85;
   box-shadow: none;
@@ -137,7 +135,6 @@ body {
     0 0 20px 8px color-mix(in srgb, var(--dot) 55%, transparent);
 }
 
-/* The newest dot breathes so your eye finds it. */
 .dot[data-newest="true"] > span::after {
   content: "";
   position: absolute;
