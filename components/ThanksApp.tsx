@@ -434,13 +434,12 @@ export function ThanksApp() {
                 </p>
               )}
             </div>
-
           </div>
           <div className="flex-wrap items-center justify-end gap-2 flex">
             <ViewToggle value={view} onChange={changeView} />
             <ThemeToggle />
             <div className="hidden md:block">
-              {todayCount === null ? null : todayCount >= 3 ? (
+              {todayCount === null ? null : todayCount >= 1 ? (
                 <>
                   <CounterPill
                     count={todayCount}
@@ -491,16 +490,12 @@ export function ThanksApp() {
       </div>
 
       <div className="pointer-events-none absolute bottom-24 left-1/4 z-1000 p-4 md:hidden">
-      <p className="mt-1 text-xs tracking-wide text-muted text-center font-bold ">
-              Thank God with the world.
-            </p>
+        <p className="mt-1 text-xs tracking-wide text-muted text-center font-bold ">
+          Thank God with the world.
+        </p>
       </div>
 
       <footer className="pointer-events-none absolute bottom-24 left-0 z-1000 p-4 md:bottom-0 md:p-6">
-
-
-
-
         <p className="hidden text-[11px] font-medium uppercase leading-snug tracking-[0.14em] text-muted md:block">
           Real people. Real stories.
           <br />
@@ -530,8 +525,6 @@ export function ThanksApp() {
           />
         </svg>
       </button>
-
-
 
       <MobileNav
         view={view}

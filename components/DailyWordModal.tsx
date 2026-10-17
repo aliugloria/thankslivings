@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import type { DailyWord } from "@/lib/dailyWord";
+import { X } from "lucide-react";
 
 type Props = {
   open: boolean;
@@ -39,11 +40,14 @@ export function DailyWordModal({ open, word, onClose, onShare }: Props) {
             // }}
           >
             <div className="flex items-start justify-between gap-4">
-              <p id="word-title" className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">
+              <p
+                id="word-title"
+                className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted"
+              >
                 Rhema Word for the Day <br />
-                <span>
-                Today&rsquo;s word from the Hallelujah Challenge.
-                </span>
+                {/* <span className="lowercase">
+                Today&rsquo;s word from the (Hallelujah Challenge).
+                </span> */}
               </p>
               <button
                 type="button"
@@ -51,13 +55,13 @@ export function DailyWordModal({ open, word, onClose, onShare }: Props) {
                 aria-label="Close"
                 className="-mr-2 -mt-1 grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted hover:bg-hairline"
               >
-                <svg width="12" height="12" viewBox="0 0 10 10" fill="none" aria-hidden>
-                  <path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
+                <X />
               </button>
             </div>
 
-            <h2 className="mt-6 text-center font-script text-6xl leading-tight sm:text-7xl">{word.word}</h2>
+            <h2 className="mt-6 text-center font-script text-6xl leading-tight sm:text-7xl">
+              {word.word}
+            </h2>
             {/* <p className="mt-3 text-center text-sm text-muted">
               Today&rsquo;s word from the Hallelujah Challenge.
             </p> */}
@@ -83,27 +87,26 @@ export function DailyWordModal({ open, word, onClose, onShare }: Props) {
               </div>
             )}
 
-            <button
+            {/* <button
               type="button"
               autoFocus
               onClick={onShare}
               className="mt-7 w-full rounded-xl bg-ink px-4 py-3.5 text-[15px] font-semibold text-bg transition-opacity hover:opacity-90"
             >
               Thank God for it
-            </button>
-            {/* <button
-              type="button"
-              onClick={onClose}
-              className="mt-2 w-full rounded-xl px-4 py-3 text-sm text-muted transition-colors hover:bg-hairline"
-            >
-              Close
             </button> */}
-              <p className="mt-3 text-center text-[11px] text-muted/80">
-              Shared by the Thanksliving community.
-            </p>
+
+            <button
+              type="button"
+              autoFocus
+              onClick={onShare}
+              className="mt-7 border border-live bg-hairline hover:bg-live/50 transition-all duration-180 rounded-full w-full py-3.5 cursor-pointer"
+            >
+              Thank God for it
+            </button>
 
             {/* <p className="mt-3 text-center text-[11px] text-muted/80">
-              Shared by the Thanksliving community, not an official page.
+              Shared by the Thanksliving community.
             </p> */}
           </motion.div>
         </motion.div>
